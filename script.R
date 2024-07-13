@@ -22,3 +22,5 @@ final_df <- merged_df %>%
 
 # Inspect the final dataframe
 View(final_df)
+
+
