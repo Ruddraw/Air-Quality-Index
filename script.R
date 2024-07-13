@@ -1,5 +1,16 @@
+#Project Question:
+#How do air quality trends vary across different regions and sub-regions, 
+#and what are the potential factors driving these variations?
+
+
+
 #library
 library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+library(forecast)
+
 #load dataset
 aqi_df <- read_csv("data_date.csv")
 country_df <- read_csv("continents2.csv")
@@ -20,7 +31,54 @@ merged_df <- aqi_df %>%
 final_df <- merged_df %>% 
   select(Date, Country, Status, `AQI Value`, `alpha-2`, region, `sub-region`)
 
-# Inspect the final dataframe
-View(final_df)
+#convert the data column to date type
+final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
+
+#EDA
+# Calculate the mean AQI value by region
+# Calculate the mean AQI value by region
+mean_aqi_by_region <- final_df %>%
+  group_by(region) %>%
+  summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create a bar plot of mean AQI values by region
+ggplot(mean_aqi_by_region, aes(x = reorder(region, -mean_aqi), y = mean_aqi)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Mean AQI Values by Region",
+       x = "Region",
+       y = "Mean AQI Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Trend Analysis
+ggplot(final_df, aes(x = Date, y = `AQI Value`, color = `sub-region`)) +
+  geom_line() +
+  facet_wrap(~region) +
+  labs(title = "Trend Analysis of AQI Values by Region and Sub-region",
+       x = "Date",
+       y = "AQI Value",
+       color = "Sub-region")
 
 
+# Comparative Analysis
+aqi_region_summary <- final_df %>%
+  group_by(region) %>%
+  summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE), 
+            median_aqi = median(`AQI Value`, na.rm = TRUE),
+            sd_aqi = sd(`AQI Value`, na.rm = TRUE))
+
+print(aqi_region_summary)
+
+
+# Decompose the time series for a specific region
+region_ts <- final_df %>%
+  filter(region == "Asia") %>%
+  group_by(Date) %>%
+  summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE))
+
+region_ts$Date <- as.Date(region_ts$Date)
+region_ts <- ts(region_ts$mean_aqi, start = c(year(min(region_ts$Date)), month(min(region_ts$Date))), frequency = 12)
+
+decomposed_ts <- stl(region_ts, s.window = "periodic")
+plot(decomposed_ts)
