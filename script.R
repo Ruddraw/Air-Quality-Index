@@ -10,6 +10,7 @@ library(ggplot2)
 library(tidyr)
 library(lubridate)
 library(forecast)
+library(readr)
 
 #load dataset
 aqi_df <- read_csv("data_date.csv")
@@ -34,7 +35,20 @@ final_df <- merged_df %>%
 #convert the data column to date type
 final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
 
-#EDA
+# Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
+ggplot(data = final_df) + 
+  geom_bar(mapping = aes(x = region, fill = Status)) + 
+  scale_fill_manual(values = c(
+    "Good" = "green", 
+    "Moderate" = "yellow", 
+    "Unhealthy for Sensitive Groups" = "orange", 
+    "Unhealthy" = "red", 
+    "Very Unhealthy" = "purple", 
+    "Hazardous" = "brown"
+  )) +
+  ggtitle("AQI by Region") 
+
+
 # Calculate the mean AQI value by region
 mean_aqi_by_region <- final_df %>%
   group_by(region) %>%
@@ -47,10 +61,9 @@ ggplot(mean_aqi_by_region, aes(x = reorder(region, -mean_aqi), y = mean_aqi)) +
   labs(title = "Mean AQI Values by Region",
        x = "Region",
        y = "Mean AQI Value") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal() 
 
-# Trend Analysis
+
 # Aggregate the data by month and region to reduce the number of data points
 final_df <- final_df %>%
   mutate(Month = floor_date(Date, "month")) %>%
@@ -65,7 +78,8 @@ ggplot(final_df, aes(x = Month, y = mean_aqi, color = region)) +
        x = "Date",
        y = "Mean AQI Value",
        color = "Region") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_minimal() 
   scale_y_continuous(limits = c(0, NA))  # Ensure y-axis starts from 0
+
+
 
