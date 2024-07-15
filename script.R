@@ -55,13 +55,22 @@ mean_aqi_by_region <- final_df %>%
   summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
   ungroup()
 
-# Create a bar plot of mean AQI values by region
-ggplot(mean_aqi_by_region, aes(x = reorder(region, -mean_aqi), y = mean_aqi)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Mean AQI Values by Region",
+# Create a named vector of mean AQI values
+mean_aqi_vector <- setNames(round(mean_aqi_by_region$mean_aqi, 2), mean_aqi_by_region$region)
+
+# Create a box plot of AQI values by region
+ggplot(final_df, aes(x = reorder(region, `AQI Value`), y = `AQI Value`, fill = region)) +
+  geom_boxplot() +
+  labs(title = "AQI Values by Region",
        x = "Region",
-       y = "Mean AQI Value") +
-  theme_minimal() 
+       y = "AQI Value") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3", guide = guide_legend(title = "Region (Mean AQI)")) +
+  scale_fill_manual(
+    values = scales::brewer_pal(palette = "Set3")(length(mean_aqi_vector)),
+    labels = paste(names(mean_aqi_vector), "(Mean AQI:", mean_aqi_vector, ")")
+  )
+
 
 
 # Aggregate the data by month and region to reduce the number of data points
