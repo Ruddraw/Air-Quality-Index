@@ -22,7 +22,7 @@ head(country_df)
 
 # Select relevant columns from the country_df
 country_df <- country_df %>% 
-  select(name, sub_region)
+  select(name, sub-region)
 
 # Merge the datasets on the country and name columns
 merged_df <- aqi_df %>%
@@ -30,7 +30,7 @@ merged_df <- aqi_df %>%
 
 # Select only the columns of interest
 final_df <- merged_df %>% 
-  select(Date, Country, Status, `AQI Value`, `alpha-2`, region, `sub-region`)
+  select(Date, Country, Status, `AQI Value`, `alpha-2`, region, sub_region = `sub-region`)
 
 #convert the data column to date type
 final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
@@ -89,6 +89,58 @@ ggplot(final_df, aes(x = Month, y = mean_aqi, color = region)) +
        color = "Region") +
   theme_minimal() 
   scale_y_continuous(limits = c(0, NA))  # Ensure y-axis starts from 0
+
+ 
+  
+  
+# Function to create box plot for a given region
+create_region_box_plot <- function(region_name) {
+  # Filter data for the specified region
+  region_df <- final_df %>%
+    filter(region == region_name)
+  
+  # Calculate mean AQI values for each sub-region in the specified region
+  mean_aqi_by_sub_region <- region_df %>%
+    group_by(sub_region) %>%
+    summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # Create a named vector of mean AQI values for sub-regions
+  mean_aqi_sub_vector <- setNames(round(mean_aqi_by_sub_region$mean_aqi, 2), mean_aqi_by_sub_region$sub_region)
+  
+  # Create a box plot of AQI values by sub-region
+  ggplot(region_df, aes(x = reorder(sub_region, `AQI Value`), y = `AQI Value`, fill = sub_region)) +
+    geom_boxplot() +
+    labs(title = paste("AQI Values by Sub-region in", region_name),
+         x = "Sub-region",
+         y = "AQI Value") +
+    theme_minimal() +
+    scale_fill_brewer(palette = "Set3", guide = guide_legend(title = "Sub-region (Mean AQI)")) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_fill_manual(
+      values = scales::brewer_pal(palette = "Set3")(length(mean_aqi_sub_vector)),
+      labels = paste(names(mean_aqi_sub_vector), "(Mean AQI:", mean_aqi_sub_vector, ")")
+    )
+}
+
+#box plot for Asia region
+create_region_box_plot("Asia")
+
+#box plot for Africa region
+create_region_box_plot("Africa")
+
+#box plot for Europe region
+create_region_box_plot("Europe")
+
+#box plot for Americas region
+create_region_box_plot("Americas")
+
+#box plot for Oceania region
+create_region_box_plot("Oceania") 
+  
+  
+  
+
 
 
 
