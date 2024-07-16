@@ -15,10 +15,12 @@ library(readr)
 #load dataset
 aqi_df <- read_csv("data_date.csv")
 country_df <- read_csv("continents2.csv")
+population_df <- read.csv("country_population_2023.csv")
 
 #inspect the data sets
 head(aqi_df)
 head(country_df)
+head(population_df)
 
 # Select relevant columns from the country_df
 country_df <- country_df %>% 
@@ -34,6 +36,18 @@ final_df <- merged_df %>%
 
 #convert the data column to date type
 final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
+
+
+# Extract unique country names
+unique_countries <- unique(final_df$Country)
+
+# Print the unique country names
+print(unique_countries)
+
+
+
+
+
 
 # Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
 ggplot(data = final_df) + 
@@ -73,7 +87,7 @@ ggplot(final_df, aes(x = reorder(region, `AQI Value`), y = `AQI Value`, fill = r
 
 
 
-# Aggregate the data by month and region to reduce the number of data points
+# AQI trend
 final_df <- final_df %>%
   mutate(Month = floor_date(Date, "month")) %>%
   group_by(Month, region) %>%
@@ -91,8 +105,6 @@ ggplot(final_df, aes(x = Month, y = mean_aqi, color = region)) +
   scale_y_continuous(limits = c(0, NA))  # Ensure y-axis starts from 0
 
  
-  
-  
 # Function to create box plot for a given region
 create_region_box_plot <- function(region_name) {
   # Filter data for the specified region
