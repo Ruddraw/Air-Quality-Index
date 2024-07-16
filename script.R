@@ -42,17 +42,6 @@ final_df <- final_df %>%
 final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
 
 
-# Extract unique country names
-unique_countries <- unique(final_df$Country)
-
-# Print the unique country names
-print(unique_countries)
-
-
-
-
-
-
 # Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
 ggplot(data = final_df) + 
   geom_bar(mapping = aes(x = region, fill = Status)) + 
@@ -88,8 +77,6 @@ ggplot(final_df, aes(x = reorder(region, `AQI Value`), y = `AQI Value`, fill = r
     values = scales::brewer_pal(palette = "Set3")(length(mean_aqi_vector)),
     labels = paste(names(mean_aqi_vector), "(Mean AQI:", mean_aqi_vector, ")")
   )
-
-
 
 # AQI trend
 final_df <- final_df %>%
@@ -156,7 +143,6 @@ create_region_box_plot("Oceania")
   
   
   
-
-
+#dataset has to chage
 
 
