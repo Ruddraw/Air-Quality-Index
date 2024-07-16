@@ -15,7 +15,7 @@ library(readr)
 #load dataset
 aqi_df <- read_csv("data_date.csv")
 country_df <- read_csv("continents2.csv")
-population_df <- read.csv("country_population_2023.csv")
+population_df <- read.csv("country_population_2023.csv") 
 
 #inspect the data sets
 head(aqi_df)
@@ -26,13 +26,17 @@ head(population_df)
 country_df <- country_df %>% 
   select(name, sub-region)
 
-# Merge the datasets on the country and name columns
-merged_df <- aqi_df %>%
-  inner_join(country_df, by = c("Country" = "name"))
+#select the relevent column from population_df
+population_df <- population_df %>% 
+  select(Country, Population, Yearly_Change, Urban_Pop..)
+
+# Merge the population data with the merged_df
+final_df <- merged_df %>%
+  inner_join(population_df, by = "Country")
 
 # Select only the columns of interest
-final_df <- merged_df %>% 
-  select(Date, Country, Status, `AQI Value`, `alpha-2`, region, sub_region = `sub-region`)
+final_df <- final_df %>% 
+  select(Date, Country, Status, `AQI Value`, `alpha-2`, region, sub_region = `sub-region`, Population, Yearly_Change, Urban_Pop..)
 
 #convert the data column to date type
 final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
