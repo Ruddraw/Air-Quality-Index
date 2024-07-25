@@ -4,7 +4,7 @@
 
 
 
-#library
+# Load necessary libraries
 library(dplyr)
 library(ggplot2)
 library(tidyr)
@@ -12,23 +12,27 @@ library(lubridate)
 library(forecast)
 library(readr)
 
-#load dataset
-aqi_df <- read_csv("data_date.csv")
-country_df <- read_csv("continents2.csv")
+# Load datasets
+aqi_df <- read.csv("data_date.csv")
+country_df <- read.csv("continents2.csv")
 population_df <- read.csv("country_population_2023.csv") 
 
-#inspect the data sets
+# Inspect the data sets
 head(aqi_df)
 head(country_df)
 head(population_df)
 
 # Select relevant columns from the country_df
 country_df <- country_df %>% 
-  select(name, sub-region)
+  select(name, sub_region = `sub-region`, region)
 
-#select the relevent column from population_df
+# Select the relevant columns from population_df
 population_df <- population_df %>% 
-  select(Country, Population, Yearly_Change, Urban_Pop..)
+  select(Country, Population, Yearly_Change, Urban_Population = `Urban_Pop..`)
+
+# Merge aqi_df with country_df
+merged_df <- aqi_df %>%
+  inner_join(country_df, by = c("Country" = "name"))
 
 # Merge the population data with the merged_df
 final_df <- merged_df %>%
@@ -36,10 +40,14 @@ final_df <- merged_df %>%
 
 # Select only the columns of interest
 final_df <- final_df %>% 
-  select(Date, Country, Status, `AQI Value`, `alpha-2`, region, sub_region = `sub-region`, Population, Yearly_Change, Urban_Pop..)
+  select(Date, Country, Status, `AQI Value`, region, sub_region, Population, Yearly_Change, Urban_Population)
 
-#convert the data column to date type
-final_df$Date <- as.Date(final_df$Date, formate = "%Y-%m-%d")
+# Convert the Date column to date type
+final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
+
+# Inspect the final_df to ensure it contains the correct columns
+head(final_df)
+
 
 
 # Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
@@ -92,7 +100,7 @@ ggplot(final_df, aes(x = Month, y = mean_aqi, color = region)) +
        x = "Date",
        y = "Mean AQI Value",
        color = "Region") +
-  theme_minimal() 
+  theme_minimal() +
   scale_y_continuous(limits = c(0, NA))  # Ensure y-axis starts from 0
 
  
