@@ -15,7 +15,7 @@ library(readr)
 # Load datasets
 aqi_df <- read.csv("data_date.csv")
 country_df <- read.csv("continents2.csv")
-population_df <- read.csv("country_population_2023.csv") 
+population_df <- read.csv("country_population.csv")  # Update the filename to your new population file
 
 # Inspect the data sets
 head(aqi_df)
@@ -24,11 +24,11 @@ head(population_df)
 
 # Select relevant columns from the country_df
 country_df <- country_df %>% 
-  select(name, sub_region = `sub-region`, region)
+  select(name, sub_region = `sub.region`, region)
 
 # Select the relevant columns from population_df
 population_df <- population_df %>% 
-  select(Country, Population, Yearly_Change, Urban_Population = `Urban_Pop..`)
+  select(Country, Population_2022, Population_2023, Yearly_Growth = `Yearly_Growth...`)
 
 # Merge aqi_df with country_df
 merged_df <- aqi_df %>%
@@ -40,14 +40,13 @@ final_df <- merged_df %>%
 
 # Select only the columns of interest
 final_df <- final_df %>% 
-  select(Date, Country, Status, `AQI Value`, region, sub_region, Population, Yearly_Change, Urban_Population)
+  select(Date, Country, Status, `AQI_Value` = `AQI.Value`, region, sub_region, Population_2022, Population_2023, Yearly_Growth)
 
 # Convert the Date column to date type
 final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
 
 # Inspect the final_df to ensure it contains the correct columns
 head(final_df)
-
 
 
 # Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
@@ -64,21 +63,21 @@ ggplot(data = final_df) +
   ggtitle("AQI by Region") 
 
 
-# Calculate the mean AQI value by region
+# Calculate the mean AQI_Value by region
 mean_aqi_by_region <- final_df %>%
   group_by(region) %>%
-  summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
+  summarise(mean_aqi = mean(`AQI_Value`, na.rm = TRUE)) %>%
   ungroup()
 
-# Create a named vector of mean AQI values
+# Create a named vector of mean AQI_Values
 mean_aqi_vector <- setNames(round(mean_aqi_by_region$mean_aqi, 2), mean_aqi_by_region$region)
 
-# Create a box plot of AQI values by region
-ggplot(final_df, aes(x = reorder(region, `AQI Value`), y = `AQI Value`, fill = region)) +
+# Create a box plot of AQI_Values by region
+ggplot(final_df, aes(x = reorder(region, `AQI_Value`), y = `AQI_Value`, fill = region)) +
   geom_boxplot() +
-  labs(title = "AQI Values by Region",
+  labs(title = "AQI_Values by Region",
        x = "Region",
-       y = "AQI Value") +
+       y = "AQI_Value") +
   theme_minimal() +
   scale_fill_brewer(palette = "Set3", guide = guide_legend(title = "Region (Mean AQI)")) +
   scale_fill_manual(
@@ -90,41 +89,41 @@ ggplot(final_df, aes(x = reorder(region, `AQI Value`), y = `AQI Value`, fill = r
 final_df <- final_df %>%
   mutate(Month = floor_date(Date, "month")) %>%
   group_by(Month, region) %>%
-  summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
+  summarise(mean_aqi = mean(`AQI_Value`, na.rm = TRUE)) %>%
   ungroup()
 
-# Create a line graph of mean AQI values by region over time
+# Create a line graph of mean AQI_Values by region over time
 ggplot(final_df, aes(x = Month, y = mean_aqi, color = region)) +
   geom_line() +
-  labs(title = "Trend Analysis of Mean AQI Values by Region",
+  labs(title = "Trend Analysis of Mean AQI_Values by Region",
        x = "Date",
-       y = "Mean AQI Value",
+       y = "Mean AQI_Value",
        color = "Region") +
   theme_minimal() +
   scale_y_continuous(limits = c(0, NA))  # Ensure y-axis starts from 0
 
- 
+
 # Function to create box plot for a given region
 create_region_box_plot <- function(region_name) {
   # Filter data for the specified region
   region_df <- final_df %>%
     filter(region == region_name)
   
-  # Calculate mean AQI values for each sub-region in the specified region
+  # Calculate mean AQI_Values for each sub-region in the specified region
   mean_aqi_by_sub_region <- region_df %>%
     group_by(sub_region) %>%
-    summarise(mean_aqi = mean(`AQI Value`, na.rm = TRUE)) %>%
+    summarise(mean_aqi = mean(`AQI_Value`, na.rm = TRUE)) %>%
     ungroup()
   
-  # Create a named vector of mean AQI values for sub-regions
+  # Create a named vector of mean AQI_Values for sub-regions
   mean_aqi_sub_vector <- setNames(round(mean_aqi_by_sub_region$mean_aqi, 2), mean_aqi_by_sub_region$sub_region)
   
-  # Create a box plot of AQI values by sub-region
-  ggplot(region_df, aes(x = reorder(sub_region, `AQI Value`), y = `AQI Value`, fill = sub_region)) +
+  # Create a box plot of AQI_Values by sub-region
+  ggplot(region_df, aes(x = reorder(sub_region, `AQI_Value`), y = `AQI_Value`, fill = sub_region)) +
     geom_boxplot() +
-    labs(title = paste("AQI Values by Sub-region in", region_name),
+    labs(title = paste("AQI_Values by Sub-region in", region_name),
          x = "Sub-region",
-         y = "AQI Value") +
+         y = "AQI_Value") +
     theme_minimal() +
     scale_fill_brewer(palette = "Set3", guide = guide_legend(title = "Sub-region (Mean AQI)")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -148,9 +147,6 @@ create_region_box_plot("Americas")
 
 #box plot for Oceania region
 create_region_box_plot("Oceania") 
-  
-  
-  
-#dataset has to chage
+
 
 
