@@ -24,13 +24,37 @@ head(population_df)
 country_df <- country_df %>% 
   select(name, sub_region = `sub.region`, region)
 
+
+#CLEAN THE POPULATION DATASET
+# Inspect the columns to identify non-numeric values
+unique(population_df$Population_2022)
+unique(population_df$Population_2023)
+# Remove commas from the population columns and convert to numeric
+population_df <- population_df %>%
+  mutate(Population_2022 = as.numeric(gsub(",", "", Population_2022)),
+         Population_2023 = as.numeric(gsub(",", "", Population_2023)))
+
+# Ensure Population_2022 and Population_2023 are of the same type
+population_df <- population_df %>%
+  mutate(Population_2022 = as.numeric(Population_2022),
+         Population_2023 = as.numeric(Population_2023))
+
 # Select the relevant columns from population_df
 population_df <- population_df %>% 
   select(Country, Population_2022, Population_2023, Yearly_Growth =`Yearly_Growth...`) 
 
+# Remove the % sign and convert Yearly_Growth to numeric
+population_df <- population_df %>%
+  mutate(Yearly_Growth = as.numeric(gsub("%$", "", Yearly_Growth)))
+
+# Remove any commas or spaces from Population_2023 and convert it to numeric
+population_df <- population_df %>%
+  mutate(Population_2023 = as.numeric(gsub("[^0-9]", "", Population_2023)))
+
 # Estimate the 2024 population using the yearly growth rate
 population_df <- population_df %>%
   mutate(Population_2024 = Population_2023 * (1 + Yearly_Growth / 100))
+
 
 # Reshape population_df to long format
 population_long_df <- population_df %>%
@@ -60,7 +84,8 @@ final_df <- final_df %>%
 final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
 
 # Inspect the final_df to ensure it contains the correct columns
-View(final_df)
+head(final_df)
+
 
 
 
