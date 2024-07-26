@@ -22,19 +22,15 @@ head(population_df)
 
 # Select relevant columns from the country_df
 country_df <- country_df %>% 
-  select(name, sub_region = `sub-region`, region)
+  select(name, sub_region = `sub.region`, region)
 
 # Select the relevant columns from population_df
 population_df <- population_df %>% 
-  select(Country, Population_2022, Population_2023, Yearly_Growth = `Yearly_Growth(%)`)
+  select(Country, Population_2022, Population_2023, Yearly_Growth =`Yearly_Growth...`) 
 
-# Merge aqi_df with country_df
-merged_df <- aqi_df %>%
-  inner_join(country_df, by = c("Country" = "name"))
-
-# Add Year column to merged_df
-merged_df <- merged_df %>%
-  mutate(Year = year(Date))
+# Estimate the 2024 population using the yearly growth rate
+population_df <- population_df %>%
+  mutate(Population_2024 = Population_2023 * (1 + Yearly_Growth / 100))
 
 # Reshape population_df to long format
 population_long_df <- population_df %>%
@@ -44,19 +40,28 @@ population_long_df <- population_df %>%
                values_to = "Population") %>%
   mutate(Year = as.numeric(Year))
 
+# Merge aqi_df with country_df
+merged_df <- aqi_df %>%
+  inner_join(country_df, by = c("Country" = "name"))
+
+# Add Year column to merged_df
+merged_df <- merged_df %>%
+  mutate(Year = year(Date))
+
 # Merge population data based on Year and Country
 final_df <- merged_df %>%
   inner_join(population_long_df, by = c("Country", "Year"))
 
 # Select only the columns of interest
 final_df <- final_df %>% 
-  select(Date, Country, Status, `AQI Value`, region, sub_region, Population, Yearly_Growth)
+  select(Date, Country, Status, `AQI_Value` = `AQI.Value`, region, sub_region, Population, Yearly_Growth)
 
 # Convert the Date column to date type
 final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
 
 # Inspect the final_df to ensure it contains the correct columns
-head(final_df)
+View(final_df)
+
 
 
 
