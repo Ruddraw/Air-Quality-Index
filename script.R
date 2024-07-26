@@ -85,6 +85,37 @@ final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
 
 # Inspect the final_df to ensure it contains the correct columns
 head(final_df)
+#delete all the NA values from the dataset
+na.omit(final_df)
+
+
+# Calculate the correlation between Yearly_Growth and AQI_Value for each region
+correlation_results <- final_df %>%
+  group_by(region) %>%
+  summarize(correlation = cor(Yearly_Growth, AQI_Value, use = "complete.obs"))
+
+# Print correlation results
+print(correlation_results)
+
+# Visualize the relationship between Yearly_Growth and AQI_Value for each region
+ggplot(final_df, aes(x = Yearly_Growth, y = AQI_Value, color = region)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ region) +
+  labs(title = "Relationship between Population Growth and AQI Values by Region",
+       x = "Yearly Growth (%)",
+       y = "AQI Value") +
+  theme_minimal()
+
+
+# Create the regression model
+model <- lm(AQI_Value ~ Yearly_Growth + Population + factor(region) + factor(sub_region), data = final_df)
+
+# Summarize the model to see the results
+summary(model)
+
+
+
 
 
 
