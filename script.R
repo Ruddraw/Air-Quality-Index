@@ -57,13 +57,13 @@ final_df <- merged_df %>%
   select(Date, Country, Status, AQI_Value = `AQI.Value`, 
          region, sub_region, Population, Yearly_Growth)
 
-# Convert the Date column to date type and remove NAs
+# Convert the Date column to date type and remove NA values
 final_df <- final_df %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
   na.omit()
 
 # Inspect the final dataframe
-head(final_df)
+View(final_df)
 
 
 # Create bar chart to compare how AQI in each region, 
@@ -159,18 +159,6 @@ create_region_box_plot <- function(region_name) {
 
 #box plot for Asia region
 create_region_box_plot("Asia")
-
-#box plot for Africa region
-create_region_box_plot("Africa")
-
-#box plot for Europe region
-create_region_box_plot("Europe")
-
-#box plot for Americas region
-create_region_box_plot("Americas")
-
-#box plot for Oceania region
-create_region_box_plot("Oceania") 
 
 
 # Function to visualize AQI and Population trends for each sub-region within a region
