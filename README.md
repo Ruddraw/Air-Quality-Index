@@ -21,22 +21,4 @@ This project aims to analyze how air quality trends vary across different region
 
 >[!NOTE]
 >The population projection for 2024 is an estimate and may not be highly accurate. The methodology involves using historical growth rates, which may not account for sudden changes in demographic trends.
-### Code Snippets for Visualization
-Here are some of the key visualizations used in this analysis:
 
-#### Bar Chart to Compare AQI in Each Region
-```r
-ggplot(data = final_df) + 
-  geom_bar(mapping = aes(x = region, fill = Status)) + 
-  scale_fill_manual(values = c(
-    "Good" = "green", 
-    "Moderate" = "yellow", 
-    "Unhealthy for Sensitive Groups" = "orange", 
-    "Unhealthy" = "red", 
-    "Very Unhealthy" = "purple"![AQI by region](https://github.com/user-attachments/assets/e8f09e35-732d-42cd-bee9-0c39ce7d8675)
-, 
-    "Hazardous" = "brown"
-  )) +
-  ggtitle("AQI by Region")
-```
-![ Alt Text](/Users/ruddraw/Documents/Code/R_learning/Air-Quality-Index/plots).
