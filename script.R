@@ -3,19 +3,20 @@
 #and what are the potential factors driving these variations?
 
 
-
 library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(lubridate)
 library(readr)
+library(gridExtra)
+
 
 # Load datasets
 aqi_df <- read.csv("data_date.csv")
 country_df <- read.csv("continents2.csv")
-population_df <- read.csv("country_population.csv")  # Ensure this is the updated population file
+population_df <- read.csv("country_population.csv")  
 
-# Inspect the data sets
+# Inspect the datasets
 head(aqi_df)
 head(country_df)
 head(population_df)
@@ -24,104 +25,49 @@ head(population_df)
 country_df <- country_df %>% 
   select(name, sub_region = `sub.region`, region)
 
-
-#CLEAN THE POPULATION DATASET
-# Inspect the columns to identify non-numeric values
-unique(population_df$Population_2022)
-unique(population_df$Population_2023)
-# Remove commas from the population columns and convert to numeric
+# Clean the population dataset
 population_df <- population_df %>%
-  mutate(Population_2022 = as.numeric(gsub(",", "", Population_2022)),
-         Population_2023 = as.numeric(gsub(",", "", Population_2023)))
-
-# Ensure Population_2022 and Population_2023 are of the same type
-population_df <- population_df %>%
-  mutate(Population_2022 = as.numeric(Population_2022),
-         Population_2023 = as.numeric(Population_2023))
-
-# Select the relevant columns from population_df
-population_df <- population_df %>% 
-  select(Country, Population_2022, Population_2023, Yearly_Growth =`Yearly_Growth...`) 
-
-# Remove the % sign and convert Yearly_Growth to numeric
-population_df <- population_df %>%
-  mutate(Yearly_Growth = as.numeric(gsub("%$", "", Yearly_Growth)))
-
-# Remove any commas or spaces from Population_2023 and convert it to numeric
-population_df <- population_df %>%
-  mutate(Population_2023 = as.numeric(gsub("[^0-9]", "", Population_2023)))
-
-# Estimate the 2024 population using the yearly growth rate
-population_df <- population_df %>%
-  mutate(Population_2024 = Population_2023 * (1 + Yearly_Growth / 100))
-
+  mutate(
+    Population_2022 = as.numeric(gsub(",", "", Population_2022)),
+    Population_2023 = as.numeric(gsub(",", "", Population_2023)),
+    Yearly_Growth = as.numeric(gsub("%$", "", `Yearly_Growth...`))
+  ) %>%
+  mutate(Population_2024 = Population_2023 * (1 + Yearly_Growth / 100)) %>%
+  select(Country, Population_2022, Population_2023, Population_2024, 
+         Yearly_Growth = `Yearly_Growth...`)
 
 # Reshape population_df to long format
 population_long_df <- population_df %>%
-  pivot_longer(cols = starts_with("Population"),
-               names_to = "Year",
-               names_prefix = "Population_",
-               values_to = "Population") %>%
+  pivot_longer(
+    cols = starts_with("Population"),
+    names_to = "Year",
+    names_prefix = "Population_",
+    values_to = "Population"
+  ) %>%
   mutate(Year = as.numeric(Year))
 
 # Merge aqi_df with country_df
 merged_df <- aqi_df %>%
-  inner_join(country_df, by = c("Country" = "name"))
-
-# Add Year column to merged_df
-merged_df <- merged_df %>%
+  inner_join(country_df, by = c("Country" = "name")) %>%
   mutate(Year = year(Date))
 
 # Merge population data based on Year and Country
 final_df <- merged_df %>%
-  inner_join(population_long_df, by = c("Country", "Year"))
+  inner_join(population_long_df, by = c("Country", "Year")) %>%
+  select(Date, Country, Status, AQI_Value = `AQI.Value`, 
+         region, sub_region, Population, Yearly_Growth)
 
-# Select only the columns of interest
-final_df <- final_df %>% 
-  select(Date, Country, Status, `AQI_Value` = `AQI.Value`, region, sub_region, Population, Yearly_Growth)
+# Convert the Date column to date type and remove NAs
+final_df <- final_df %>%
+  mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
+  na.omit()
 
-# Convert the Date column to date type
-final_df$Date <- as.Date(final_df$Date, format = "%Y-%m-%d")
-
-# Inspect the final_df to ensure it contains the correct columns
+# Inspect the final dataframe
 head(final_df)
-#delete all the NA values from the dataset
-na.omit(final_df)
 
 
-# Calculate the correlation between Yearly_Growth and AQI_Value for each region
-correlation_results <- final_df %>%
-  group_by(region) %>%
-  summarize(correlation = cor(Yearly_Growth, AQI_Value, use = "complete.obs"))
-
-# Print correlation results
-print(correlation_results)
-
-# Visualize the relationship between Yearly_Growth and AQI_Value for each region
-ggplot(final_df, aes(x = Yearly_Growth, y = AQI_Value, color = region)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = FALSE) +
-  facet_wrap(~ region) +
-  labs(title = "Relationship between Population Growth and AQI Values by Region",
-       x = "Yearly Growth (%)",
-       y = "AQI Value") +
-  theme_minimal()
-
-
-# Create the regression model
-model <- lm(AQI_Value ~ Yearly_Growth + Population + factor(region) + factor(sub_region), data = final_df)
-
-# Summarize the model to see the results
-summary(model)
-
-
-
-
-
-
-
-
-# Create bar chart to compare how AQI in each region, change color fill to fit with the ranking
+# Create bar chart to compare how AQI in each region, 
+#change color fill to fit with the ranking
 ggplot(data = final_df) + 
   geom_bar(mapping = aes(x = region, fill = Status)) + 
   scale_fill_manual(values = c(
@@ -142,10 +88,12 @@ mean_aqi_by_region <- final_df %>%
   ungroup()
 
 # Create a named vector of mean AQI_Values
-mean_aqi_vector <- setNames(round(mean_aqi_by_region$mean_aqi, 2), mean_aqi_by_region$region)
+mean_aqi_vector <- setNames(round(mean_aqi_by_region$mean_aqi, 2), 
+                            mean_aqi_by_region$region)
 
 # Create a box plot of AQI_Values by region
-ggplot(final_df, aes(x = reorder(region, `AQI_Value`), y = `AQI_Value`, fill = region)) +
+ggplot(final_df, aes(x = reorder(region, `AQI_Value`), 
+                     y = `AQI_Value`, fill = region)) +
   geom_boxplot() +
   labs(title = "AQI_Values by Region",
        x = "Region",
@@ -188,16 +136,20 @@ create_region_box_plot <- function(region_name) {
     ungroup()
   
   # Create a named vector of mean AQI_Values for sub-regions
-  mean_aqi_sub_vector <- setNames(round(mean_aqi_by_sub_region$mean_aqi, 2), mean_aqi_by_sub_region$sub_region)
+  mean_aqi_sub_vector <- setNames(round(mean_aqi_by_sub_region$mean_aqi, 2), 
+                                  mean_aqi_by_sub_region$sub_region)
   
   # Create a box plot of AQI_Values by sub-region
-  ggplot(region_df, aes(x = reorder(sub_region, `AQI_Value`), y = `AQI_Value`, fill = sub_region)) +
+  ggplot(region_df, aes(x = reorder(sub_region, `AQI_Value`), 
+                        y = `AQI_Value`, 
+                        fill = sub_region)) +
     geom_boxplot() +
     labs(title = paste("AQI_Values by Sub-region in", region_name),
          x = "Sub-region",
          y = "AQI_Value") +
     theme_minimal() +
-    scale_fill_brewer(palette = "Set3", guide = guide_legend(title = "Sub-region (Mean AQI)")) +
+    scale_fill_brewer(palette = "Set3", 
+                      guide = guide_legend(title = "Sub-region (Mean AQI)")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_fill_manual(
       values = scales::brewer_pal(palette = "Set3")(length(mean_aqi_sub_vector)),
@@ -221,4 +173,51 @@ create_region_box_plot("Americas")
 create_region_box_plot("Oceania") 
 
 
+# Function to visualize AQI and Population trends for each sub-region within a region
+visualize_trends_by_region <- function(data, region_name) {
+  # Filter data for the selected region
+  region_data <- data %>% filter(region == region_name)
+  
+  # Get unique sub-regions within the selected region
+  sub_regions <- unique(region_data$sub_region)
+  
+  # Create a list to store plots for each sub-region
+  plot_list <- list()
+  
+  # Loop through each sub-region and create plots
+  for (sub_region_name in sub_regions) {
+    sub_region_data <- region_data %>% filter(sub_region == sub_region_name)
+    
+    p <- ggplot(sub_region_data, aes(x = year(Date))) +
+      geom_line(aes(y = AQI_Value, color = "AQI Value"), size = 1) +
+      geom_line(aes(y = Population/1e6, color = "Population (Millions)"), 
+                size = 1) + 
+      labs(title = paste("AQI and Population Trends for", sub_region_name),
+           x = "Year",
+           y = "") +
+      scale_y_continuous(
+        sec.axis = sec_axis(~ . * 1e6, name = "Population")
+      ) +
+      theme_minimal() +
+      theme(legend.position = "bottom") +
+      scale_color_manual(values = c("AQI Value" = "blue", 
+                                    "Population (Millions)" = "red"))
+    
+    plot_list[[sub_region_name]] <- p
+  }
+  
+  # Arrange all plots in a grid
+  grid.arrange(grobs = plot_list, ncol = 1)
+}
+
+# Example usage:
+visualize_trends_by_region(final_df, "Asia")
+
+
+# Create the regression model
+model <- lm(AQI_Value ~ Yearly_Growth + Population + factor(region) + 
+              factor(sub_region), data = final_df)
+
+# Summarize the model to see the results
+summary(model)
 
