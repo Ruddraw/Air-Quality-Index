@@ -4,6 +4,10 @@
 
 This project aims to analyze how air quality trends vary across different regions and sub-regions, and what potential factors might be driving these variations. I performed various statistical analyses and visualizations by utilizing datasets on air quality, country information, and population statistics.
 
+> [!CAUTION]
+> This project is intended solely for practice purposes and should not be used to draw real-life conclusions.
+
+
 ## Datasets
 
 -   **Air Quality Data:** Contains daily air quality index (AQI) values for various countries.
