@@ -19,6 +19,8 @@ This project aims to analyze how air quality trends vary across different region
 ### Data Sources
 
 -   **Population Data for 2022 and 2023**: Retrieved from [Worldometers](https://www.worldometers.info/).
+-   **Air Quality Index**: Retrieved from [Kaggle](https://www.kaggle.com/datasets/azminetoushikwasi/aqi-air-quality-index-scheduled-daily-update/versions/72)
+-   **Country data**: Retrieved from [Kaggle](https://www.kaggle.com/datasets/andradaolteanu/country-mapping-iso-continent-region)
 -   **Yearly Growth Rate**: Calculated using data from the above source in Excel.
 
 ### Process
