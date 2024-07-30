@@ -27,7 +27,8 @@ This project aims to analyze how air quality trends vary across different region
 2.  **Growth Rate Calculation**: Computed the yearly growth rate based on the population figures for 2022 and 2023 using Excel.
 3.  **Population Projection for 2024**: Estimated the population for 2024 using the calculated yearly growth rate in R.
 
-> [!NOTE] The population projection for 2024 is an estimate and may not be highly accurate. The methodology involves using historical growth rates, which may not account for sudden changes in demographic trends.
+> [!NOTE]
+> The population projection for 2024 is an estimate and may not be highly accurate. The methodology involves using historical growth rates, which may not account for sudden changes in demographic trends.
 
 ### Code Snippets for Visualization
 
